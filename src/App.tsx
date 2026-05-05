@@ -10,8 +10,19 @@ type State =
   | { status: 'error'; error: string }
   | { status: 'ready'; snapshot: Snapshot };
 
+type Theme = 'default' | 'bright';
+
+function getInitialTheme(): Theme {
+  try {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'bright') return 'bright';
+  } catch {}
+  return 'default';
+}
+
 export function App() {
   const [state, setState] = useState<State>({ status: 'loading' });
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     const url = `${import.meta.env.BASE_URL}data/snapshot.json?t=${Date.now()}`;
@@ -21,11 +32,25 @@ export function App() {
       .catch(e => setState({ status: 'error', error: e.message }));
   }, []);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme === 'bright' ? 'bright' : '';
+    try { localStorage.setItem('theme', theme); } catch {}
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme(t => t === 'bright' ? 'default' : 'bright');
+  }
+
   return (
     <div className="page">
       <header className="page__head">
-        <h1>Crypto Top Market — Daily Analysis</h1>
-        <p className="muted">BTC · ETH · BNB · SOL · PENGU — refreshed once a day.</p>
+        <div className="page__head-title">
+          <h1>Crypto Top Market — Daily Analysis</h1>
+          <p className="muted">BTC · ETH · BNB · SOL · PENGU — refreshed once a day.</p>
+        </div>
+        <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+          {theme === 'bright' ? '🌙 Dark' : '☀️ Bright'}
+        </button>
       </header>
       {state.status === 'loading' && <p>Loading snapshot…</p>}
       {state.status === 'error' && (
