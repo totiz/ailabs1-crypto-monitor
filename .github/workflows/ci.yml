@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Type-check + build
+        run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run PR test plan against preview server
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+          for i in {1..30}; do
+            if curl -fsS http://localhost:4173/ > /dev/null; then
+              echo "Server up after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          node scripts/test-pr.mjs http://localhost:4173/
