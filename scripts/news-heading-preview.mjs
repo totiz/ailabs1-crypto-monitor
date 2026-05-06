@@ -1,12 +1,12 @@
 // Renders the live page, screenshots the "Latest News by Token" card four times:
 // once as-is, then with three different heading-style variants injected.
-// Output: /tmp/news-{baseline,v1-bold,v2-uppercase,v3-accent-bar}.png
+// Output: docs/previews/news-heading/news-{baseline,v1-bold,v2-uppercase,v3-accent-bar}.png
 
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 
 const URL = 'http://localhost:5173/';
-const OUT = '/tmp';
+const OUT = 'docs/previews/news-heading';
 
 const variants = {
   'v1-bold': `
